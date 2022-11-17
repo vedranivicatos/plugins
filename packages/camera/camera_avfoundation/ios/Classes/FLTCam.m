@@ -9,8 +9,38 @@
 
 @import CoreMotion;
 #import <libkern/OSAtomic.h>
+//#import "camera_avfoundation-Swift.h"
+//#import <camera_avfoundation-Swift.h>
+#import "h264_encoder.h"
 
 @implementation FLTImageStreamHandler
+
+- (instancetype)initWithCaptureSessionQueue:(dispatch_queue_t)captureSessionQueue {
+  self = [super init];
+  NSAssert(self, @"super init cannot be nil");
+  _captureSessionQueue = captureSessionQueue;
+  return self;
+}
+
+- (FlutterError *_Nullable)onCancelWithArguments:(id _Nullable)arguments {
+  __weak typeof(self) weakSelf = self;
+  dispatch_async(self.captureSessionQueue, ^{
+    weakSelf.eventSink = nil;
+  });
+  return nil;
+}
+
+- (FlutterError *_Nullable)onListenWithArguments:(id _Nullable)arguments
+                                       eventSink:(nonnull FlutterEventSink)events {
+  __weak typeof(self) weakSelf = self;
+  dispatch_async(self.captureSessionQueue, ^{
+    weakSelf.eventSink = events;
+  });
+  return nil;
+}
+@end
+
+@implementation FLTDataStreamHandler
 
 - (instancetype)initWithCaptureSessionQueue:(dispatch_queue_t)captureSessionQueue {
   self = [super init];
@@ -43,6 +73,7 @@
 @property(readonly, nonatomic) int64_t textureId;
 @property BOOL enableAudio;
 @property(nonatomic) FLTImageStreamHandler *imageStreamHandler;
+@property(nonatomic) FLTDataStreamHandler *dataStreamHandler;
 @property(readonly, nonatomic) AVCaptureSession *captureSession;
 
 @property(readonly, nonatomic) AVCaptureInput *captureVideoInput;
@@ -85,6 +116,8 @@
 /// Videos are written to disk by `videoAdaptor` on an internal queue managed by AVFoundation.
 @property(strong, nonatomic) dispatch_queue_t photoIOQueue;
 @property(assign, nonatomic) UIDeviceOrientation deviceOrientation;
+@property H264Encoder* encoder;
+
 @end
 
 @implementation FLTCam
@@ -177,6 +210,11 @@ NSString *const errorMethod = @"error";
 
   [self setCaptureSessionPreset:_resolutionPreset];
   [self updateOrientation];
+    
+    [self setEncoder:[[H264Encoder alloc] init]];
+    NSError* sessionConfigurationError;
+    [[self encoder] configureCompressSessionAndReturnError:&sessionConfigurationError];
+    NSLog(@"Error : %@", sessionConfigurationError);
 
   return self;
 }
@@ -382,6 +420,9 @@ NSString *const errorMethod = @"error";
 - (void)captureOutput:(AVCaptureOutput *)output
     didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
            fromConnection:(AVCaptureConnection *)connection {
+    
+    [[self encoder] captureOutput:output didOutputSampleBuffer:sampleBuffer fromConnection:connection];
+    
   if (output == _captureVideoOutput) {
     CVPixelBufferRef newBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CFRetain(newBuffer);
@@ -409,72 +450,72 @@ NSString *const errorMethod = @"error";
   }
   if (_isStreamingImages) {
     FlutterEventSink eventSink = _imageStreamHandler.eventSink;
-    if (eventSink && (self.streamingPendingFramesCount < self.maxStreamingPendingFramesCount)) {
-      self.streamingPendingFramesCount++;
-      CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-      // Must lock base address before accessing the pixel data
-      CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+    if (eventSink) {
+//      self.streamingPendingFramesCount++;
+//      CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+//      // Must lock base address before accessing the pixel data
+//      CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+//
+//      size_t imageWidth = CVPixelBufferGetWidth(pixelBuffer);
+//      size_t imageHeight = CVPixelBufferGetHeight(pixelBuffer);
+//
+//      NSMutableArray *planes = [NSMutableArray array];
+//
+//      const Boolean isPlanar = CVPixelBufferIsPlanar(pixelBuffer);
+//      size_t planeCount;
+//      if (isPlanar) {
+//        planeCount = CVPixelBufferGetPlaneCount(pixelBuffer);
+//      } else {
+//        planeCount = 1;
+//      }
+//
+//      for (int i = 0; i < planeCount; i++) {
+//        void *planeAddress;
+//        size_t bytesPerRow;
+//        size_t height;
+//        size_t width;
+//
+//        if (isPlanar) {
+//          planeAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, i);
+//          bytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, i);
+//          height = CVPixelBufferGetHeightOfPlane(pixelBuffer, i);
+//          width = CVPixelBufferGetWidthOfPlane(pixelBuffer, i);
+//        } else {
+//          planeAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
+//          bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
+//          height = CVPixelBufferGetHeight(pixelBuffer);
+//          width = CVPixelBufferGetWidth(pixelBuffer);
+//        }
+//
+//        NSNumber *length = @(bytesPerRow * height);
+//        NSData *bytes = [NSData dataWithBytes:planeAddress length:length.unsignedIntegerValue];
+//
+//        NSMutableDictionary *planeBuffer = [NSMutableDictionary dictionary];
+//        planeBuffer[@"bytesPerRow"] = @(bytesPerRow);
+//        planeBuffer[@"width"] = @(width);
+//        planeBuffer[@"height"] = @(height);
+//        planeBuffer[@"bytes"] = [FlutterStandardTypedData typedDataWithBytes:bytes];
+//
+//        [planes addObject:planeBuffer];
+//      }
+//      // Lock the base address before accessing pixel data, and unlock it afterwards.
+//      // Done accessing the `pixelBuffer` at this point.
+//      CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+//
+//      NSMutableDictionary *imageBuffer = [NSMutableDictionary dictionary];
+//      imageBuffer[@"width"] = [NSNumber numberWithUnsignedLong:imageWidth];
+//      imageBuffer[@"height"] = [NSNumber numberWithUnsignedLong:imageHeight];
+//      imageBuffer[@"format"] = @(_videoFormat);
+//      imageBuffer[@"planes"] = planes;
+//      imageBuffer[@"lensAperture"] = [NSNumber numberWithFloat:[_captureDevice lensAperture]];
+//      Float64 exposureDuration = CMTimeGetSeconds([_captureDevice exposureDuration]);
+//      Float64 nsExposureDuration = 1000000000 * exposureDuration;
+//      imageBuffer[@"sensorExposureTime"] = [NSNumber numberWithInt:nsExposureDuration];
+//      imageBuffer[@"sensorSensitivity"] = [NSNumber numberWithFloat:[_captureDevice ISO]];
 
-      size_t imageWidth = CVPixelBufferGetWidth(pixelBuffer);
-      size_t imageHeight = CVPixelBufferGetHeight(pixelBuffer);
-
-      NSMutableArray *planes = [NSMutableArray array];
-
-      const Boolean isPlanar = CVPixelBufferIsPlanar(pixelBuffer);
-      size_t planeCount;
-      if (isPlanar) {
-        planeCount = CVPixelBufferGetPlaneCount(pixelBuffer);
-      } else {
-        planeCount = 1;
-      }
-
-      for (int i = 0; i < planeCount; i++) {
-        void *planeAddress;
-        size_t bytesPerRow;
-        size_t height;
-        size_t width;
-
-        if (isPlanar) {
-          planeAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, i);
-          bytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, i);
-          height = CVPixelBufferGetHeightOfPlane(pixelBuffer, i);
-          width = CVPixelBufferGetWidthOfPlane(pixelBuffer, i);
-        } else {
-          planeAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
-          bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
-          height = CVPixelBufferGetHeight(pixelBuffer);
-          width = CVPixelBufferGetWidth(pixelBuffer);
-        }
-
-        NSNumber *length = @(bytesPerRow * height);
-        NSData *bytes = [NSData dataWithBytes:planeAddress length:length.unsignedIntegerValue];
-
-        NSMutableDictionary *planeBuffer = [NSMutableDictionary dictionary];
-        planeBuffer[@"bytesPerRow"] = @(bytesPerRow);
-        planeBuffer[@"width"] = @(width);
-        planeBuffer[@"height"] = @(height);
-        planeBuffer[@"bytes"] = [FlutterStandardTypedData typedDataWithBytes:bytes];
-
-        [planes addObject:planeBuffer];
-      }
-      // Lock the base address before accessing pixel data, and unlock it afterwards.
-      // Done accessing the `pixelBuffer` at this point.
-      CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
-
-      NSMutableDictionary *imageBuffer = [NSMutableDictionary dictionary];
-      imageBuffer[@"width"] = [NSNumber numberWithUnsignedLong:imageWidth];
-      imageBuffer[@"height"] = [NSNumber numberWithUnsignedLong:imageHeight];
-      imageBuffer[@"format"] = @(_videoFormat);
-      imageBuffer[@"planes"] = planes;
-      imageBuffer[@"lensAperture"] = [NSNumber numberWithFloat:[_captureDevice lensAperture]];
-      Float64 exposureDuration = CMTimeGetSeconds([_captureDevice exposureDuration]);
-      Float64 nsExposureDuration = 1000000000 * exposureDuration;
-      imageBuffer[@"sensorExposureTime"] = [NSNumber numberWithInt:nsExposureDuration];
-      imageBuffer[@"sensorSensitivity"] = [NSNumber numberWithFloat:[_captureDevice ISO]];
-
-      dispatch_async(dispatch_get_main_queue(), ^{
-        eventSink(imageBuffer);
-      });
+//      dispatch_async(dispatch_get_main_queue(), ^{
+//        eventSink(imageBuffer);
+//      });
     }
   }
   if (_isRecording && !_isRecordingPaused) {
@@ -944,6 +985,55 @@ NSString *const errorMethod = @"error";
   }
 }
 
+- (void)startDataStreamWithMessenger:(NSObject<FlutterBinaryMessenger> *)messenger {
+  [self startDataStreamWithMessenger:messenger
+                   dataStreamHandler:[[FLTDataStreamHandler alloc]
+                                          initWithCaptureSessionQueue:_captureSessionQueue]];
+}
+
+- (void)startDataStreamWithMessenger:(NSObject<FlutterBinaryMessenger> *)messenger
+                   dataStreamHandler:(FLTDataStreamHandler *)dataStreamHandler {
+  if (!_isStreamingImages) {
+    FlutterEventChannel *eventChannel = [FlutterEventChannel
+        eventChannelWithName:@"plugins.flutter.io/camera_avfoundation/dataStream"
+             binaryMessenger:messenger];
+    FLTThreadSafeEventChannel *threadSafeEventChannel =
+        [[FLTThreadSafeEventChannel alloc] initWithEventChannel:eventChannel];
+
+    _dataStreamHandler = dataStreamHandler;
+    __weak typeof(self) weakSelf = self;
+    [threadSafeEventChannel setStreamHandler:_dataStreamHandler
+                                  completion:^{
+                                    typeof(self) strongSelf = weakSelf;
+                                    if (!strongSelf) return;
+
+                                    dispatch_async(strongSelf.captureSessionQueue, ^{
+                                      // cannot use the outter strongSelf
+                                      typeof(self) strongSelf = weakSelf;
+                                      if (!strongSelf) return;
+
+                                      strongSelf.isStreamingImages = YES;
+                                      strongSelf.streamingPendingFramesCount = 0;
+                                    });
+                                  }];
+      if(![[self encoder] naluHandling]){
+          [[self encoder] setNaluHandling:^(NSData* data) {
+              FlutterEventSink eventSink = self->_dataStreamHandler.eventSink;
+              if(eventSink){
+                  dispatch_async(dispatch_get_main_queue(), ^{
+                      eventSink(data);
+                  });
+              } else {
+                  NSLog(@"Event sink null");
+              }
+          }];
+      }
+  } else {
+    [_methodChannel invokeMethod:errorMethod
+                       arguments:@"Data from camera is already streaming!"];
+  }
+}
+
 - (void)stopImageStream {
   if (_isStreamingImages) {
     _isStreamingImages = NO;
@@ -953,7 +1043,20 @@ NSString *const errorMethod = @"error";
   }
 }
 
+- (void)stopDataStream {
+  if (_isStreamingImages) {
+    _isStreamingImages = NO;
+    _dataStreamHandler = nil;
+  } else {
+    [_methodChannel invokeMethod:errorMethod arguments:@"Data from camera is not streaming!"];
+  }
+}
+
 - (void)receivedImageStreamData {
+  self.streamingPendingFramesCount--;
+}
+
+- (void)receivedVideoStreamData {
   self.streamingPendingFramesCount--;
 }
 

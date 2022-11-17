@@ -14,6 +14,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+//@class H264Encoder;
+
 /**
  * A class that manages camera's state and performs camera operations.
  */
@@ -68,6 +70,7 @@ NS_ASSUME_NONNULL_BEGIN
  * cause later frames to be dropped instead of streamed.
  */
 - (void)receivedImageStreamData;
+- (void)receivedVideoStreamData;
 
 /**
  * Applies FocusMode on the AVCaptureDevice.
@@ -90,7 +93,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setFocusPointWithResult:(FLTThreadSafeFlutterResult *)result x:(double)x y:(double)y;
 - (void)setExposureOffsetWithResult:(FLTThreadSafeFlutterResult *)result offset:(double)offset;
 - (void)startImageStreamWithMessenger:(NSObject<FlutterBinaryMessenger> *)messenger;
+- (void)startDataStreamWithMessenger:(NSObject<FlutterBinaryMessenger> *)messenger;
 - (void)stopImageStream;
+- (void)stopDataStream;
 - (void)getMaxZoomLevelWithResult:(FLTThreadSafeFlutterResult *)result;
 - (void)getMinZoomLevelWithResult:(FLTThreadSafeFlutterResult *)result;
 - (void)setZoomLevel:(CGFloat)zoom Result:(FLTThreadSafeFlutterResult *)result;

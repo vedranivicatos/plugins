@@ -177,6 +177,10 @@ abstract class CameraPlatform extends PlatformInterface {
     throw UnimplementedError('onStreamedFrameAvailable() is not implemented.');
   }
 
+  Stream<Uint8List> onStreamedDataAvailable(int cameraId) {
+    throw UnimplementedError('onStreamedDataAvailable() is not implemented.');
+  }
+
   /// Sets the flash mode for the selected camera.
   /// On Web [FlashMode.auto] corresponds to [FlashMode.always].
   Future<void> setFlashMode(int cameraId, FlashMode mode) {

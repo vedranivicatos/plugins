@@ -103,6 +103,7 @@
 
 - (void)handleMethodCallAsync:(FlutterMethodCall *)call
                        result:(FLTThreadSafeFlutterResult *)result {
+//    NSLog(@"Forked");
   if ([@"availableCameras" isEqualToString:call.method]) {
     if (@available(iOS 10.0, *)) {
       NSMutableArray *discoveryDevices =
@@ -151,6 +152,15 @@
     [result sendSuccess];
   } else if ([@"receivedImageStreamData" isEqualToString:call.method]) {
     [_camera receivedImageStreamData];
+    [result sendSuccess];
+  } else if ([@"startDataStream" isEqualToString:call.method]) {
+    [_camera startDataStreamWithMessenger:_messenger];
+    [result sendSuccess];
+  } else if ([@"stopDataStream" isEqualToString:call.method]) {
+    [_camera stopDataStream];
+    [result sendSuccess];
+  } else if ([@"receivedVideoStreamData" isEqualToString:call.method]) {
+    [_camera receivedVideoStreamData];
     [result sendSuccess];
   } else {
     NSDictionary *argsMap = call.arguments;

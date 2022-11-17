@@ -20,6 +20,7 @@ import '../camera.dart';
 // to this package.
 // ignore: camel_case_types
 typedef onLatestImageAvailable = Function(CameraImage image);
+typedef onVideoDataAvailable = Function(Uint8List data);
 
 /// Completes with a list of available cameras.
 ///
@@ -257,6 +258,7 @@ class CameraController extends ValueNotifier<CameraValue> {
 
   bool _isDisposed = false;
   StreamSubscription<CameraImageData>? _imageStreamSubscription;
+  StreamSubscription<Uint8List>? _videoStreamSubscription;
   FutureOr<bool>? _initCalled;
   StreamSubscription<DeviceOrientationChangedEvent>?
       _deviceOrientationSubscription;
@@ -448,6 +450,35 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  Future<void> startVideoDataStream(onVideoDataAvailable onAvailable) async {
+    assert(defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
+    _throwIfNotInitialized('startImageStream');
+    if (value.isRecordingVideo) {
+      throw CameraException(
+        'A video recording is already started.',
+        'startImageStream was called while a video is being recorded.',
+      );
+    }
+    if (value.isStreamingImages) {
+      throw CameraException(
+        'A camera has started streaming images.',
+        'startImageStream was called while a camera was streaming images.',
+      );
+    }
+
+    try {
+      _videoStreamSubscription = CameraPlatform.instance
+          .onStreamedDataAvailable(_cameraId)
+          .listen((Uint8List data) {
+        onAvailable(data);
+      });
+      value = value.copyWith(isStreamingImages: true);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
   /// Stop streaming images from platform camera.
   ///
   /// Throws a [CameraException] if image streaming was not started or video
@@ -476,6 +507,33 @@ class CameraController extends ValueNotifier<CameraValue> {
       value = value.copyWith(isStreamingImages: false);
       await _imageStreamSubscription?.cancel();
       _imageStreamSubscription = null;
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  
+  Future<void> stopVideoDataStream() async {
+    assert(defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
+    _throwIfNotInitialized('stopVideoDataStream');
+    if (value.isRecordingVideo) {
+      throw CameraException(
+        'A video recording is already started.',
+        'stopImageStream was called while a video is being recorded.',
+      );
+    }
+    if (!value.isStreamingImages) {
+      throw CameraException(
+        'No camera is streaming images',
+        'stopImageStream was called when no camera is streaming images.',
+      );
+    }
+
+    try {
+      value = value.copyWith(isStreamingImages: false);
+      await _videoStreamSubscription?.cancel();
+      _videoStreamSubscription = null;
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }

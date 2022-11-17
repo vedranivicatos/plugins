@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -53,8 +54,14 @@ class MethodChannelCamera extends CameraPlatform {
   // The stream to receive frames from the native code.
   StreamSubscription<dynamic>? _platformImageStreamSubscription;
 
+  // The stream to receive raw video data from the native code.
+  StreamSubscription<dynamic>? _platformDataStreamSubscription;
+
   // The stream for vending frames to platform interface clients.
   StreamController<CameraImageData>? _frameStreamController;
+
+  // The stream for raw video data to platform interface clients.
+  StreamController<Uint8List>? _dataStreamController;
 
   Stream<CameraEvent> _cameraEvents(int cameraId) =>
       cameraEventStreamController.stream
@@ -290,6 +297,51 @@ class MethodChannelCamera extends CameraPlatform {
     );
     return _frameStreamController!.stream;
   }
+
+  @override
+  Stream<Uint8List> onStreamedDataAvailable(int cameraId) {
+    _dataStreamController = StreamController<Uint8List>(
+      onListen: _onDataStreamListen,
+      onPause: _onDataStreamPauseResume,
+      onResume: _onDataStreamPauseResume,
+      onCancel: _onDataStreamCancel,
+    );
+    return _dataStreamController!.stream;
+  }
+
+  void _onDataStreamListen() {
+    _startDataPlatformStream();
+  }
+
+  Future<void> _startDataPlatformStream() async {
+    await _channel.invokeMethod<void>('startDataStream');
+    const EventChannel cameraEventChannel =
+    EventChannel('plugins.flutter.io/camera/dataStream');
+    _platformDataStreamSubscription =
+        cameraEventChannel.receiveBroadcastStream().listen((dynamic data) {
+          if (defaultTargetPlatform == TargetPlatform.iOS) {
+            try {
+              _channel.invokeMethod<void>('receivedVideoStreamData');
+            } on PlatformException catch (e) {
+              throw CameraException(e.code, e.message);
+            }
+          }
+          _dataStreamController!.add(data as Uint8List);
+        });
+  }
+
+  FutureOr<void> _onDataStreamCancel() async {
+    await _channel.invokeMethod<void>('stopDataStream');
+    await _platformDataStreamSubscription?.cancel();
+    _platformDataStreamSubscription = null;
+    _dataStreamController = null;
+  }
+
+  void _onDataStreamPauseResume() {
+    throw CameraException('InvalidCall',
+        'Pause and resume are not supported for onStreamedDataAvailable');
+  }
+  
 
   void _onFrameStreamListen() {
     _startPlatformStream();

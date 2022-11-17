@@ -13,11 +13,12 @@ A Flutter plugin to use the camera from your Flutter app.
   s.author           = { 'Flutter Dev Team' => 'flutter-dev@googlegroups.com' }
   s.source           = { :http => 'https://github.com/flutter/plugins/tree/main/packages/camera_avfoundation' }
   s.documentation_url = 'https://pub.dev/packages/camera_avfoundation'
-  s.source_files = 'Classes/**/*.{h,m}'
+  s.source_files = 'Classes/**/*.{h,m,swift}'
   s.public_header_files = 'Classes/**/*.h'
   s.module_map = 'Classes/CameraPlugin.modulemap'
   s.dependency 'Flutter'
 
-  s.platform = :ios, '9.0'
+  s.platform = :ios, '13.0'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
+#  s.pod_target_xcconfig = { 'SWIFT_OBJC_BRIDGING_HEADER' => 'camera_avfoundation-Swift.h'}
 end
