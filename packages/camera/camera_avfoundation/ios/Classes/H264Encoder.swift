@@ -29,17 +29,18 @@ import Foundation
         
     // MARK: - init
     
-    override init() {
+    @objc public override init() {
         super.init()
     }
     
     // MARK: - configure session
     
     /// create VTCompressSession with default settings
-    @objc public func configureCompressSession() throws {
+    @objc public func configureCompressSession(width w: Int, height h: Int) throws {
+        print("Compress Session width: \(w) height: \(h)")
         let error = VTCompressionSessionCreate(allocator: kCFAllocatorDefault,
-                                             width: Int32(720),
-                                             height: Int32(1280),
+                                             width: Int32(w),
+                                             height: Int32(h),
                                              codecType: kCMVideoCodecType_H264,
                                              encoderSpecification: nil,
                                              imageBufferAttributes: nil,

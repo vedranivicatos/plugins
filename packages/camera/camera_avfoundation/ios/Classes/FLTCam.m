@@ -11,7 +11,8 @@
 #import <libkern/OSAtomic.h>
 //#import "camera_avfoundation-Swift.h"
 //#import <camera_avfoundation-Swift.h>
-#import "h264_encoder.h"
+//#import "h264_encoder.h"
+#import <camera_avfoundation/camera_avfoundation-Swift.h>
 
 @implementation FLTImageStreamHandler
 
@@ -213,8 +214,10 @@ NSString *const errorMethod = @"error";
     
     [self setEncoder:[[H264Encoder alloc] init]];
     NSError* sessionConfigurationError;
-    [[self encoder] configureCompressSessionAndReturnError:&sessionConfigurationError];
-    NSLog(@"Error : %@", sessionConfigurationError);
+    [[self encoder] configureCompressSessionWithWidth:_previewSize.width height:_previewSize.height error:&sessionConfigurationError];
+    if(sessionConfigurationError){
+        NSLog(@"Session Configuration Error : %@", sessionConfigurationError);
+    }
 
   return self;
 }
