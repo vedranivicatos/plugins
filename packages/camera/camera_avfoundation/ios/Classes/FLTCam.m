@@ -1050,6 +1050,7 @@ NSString *const errorMethod = @"error";
   if (_isStreamingImages) {
     _isStreamingImages = NO;
     _dataStreamHandler = nil;
+    [[self encoder] invalidateCompressionSession];
   } else {
     [_methodChannel invokeMethod:errorMethod arguments:@"Data from camera is not streaming!"];
   }

@@ -208,6 +208,11 @@ import Foundation
                                         sourceFrameRefcon: nil,
                                         infoFlagsOut: nil)
     }
+    
+    /// Call on stopDataStream to properly dispose current compression session
+    @objc public func invalidateCompressionSession() {
+        VTCompressionSessionInvalidate(_session)
+    }
 }
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate

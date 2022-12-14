@@ -20,5 +20,4 @@ A Flutter plugin to use the camera from your Flutter app.
 
   s.platform = :ios, '13.0'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
-#  s.pod_target_xcconfig = { 'SWIFT_OBJC_BRIDGING_HEADER' => 'camera_avfoundation-Swift.h'}
 end
