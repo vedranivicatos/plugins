@@ -130,7 +130,7 @@ NSString *const errorMethod = @"error";
                        enableAudio:(BOOL)enableAudio
                        orientation:(UIDeviceOrientation)orientation
                captureSessionQueue:(dispatch_queue_t)captureSessionQueue
-                           bitrate:(NSInteger)bitrate
+                           bitrate:(NSNumber *)bitrate
                              error:(NSError **)error {
   return [self initWithCameraName:cameraName
                  resolutionPreset:resolutionPreset
@@ -148,7 +148,7 @@ NSString *const errorMethod = @"error";
                        orientation:(UIDeviceOrientation)orientation
                     captureSession:(AVCaptureSession *)captureSession
                captureSessionQueue:(dispatch_queue_t)captureSessionQueue
-                           bitrate:(NSInteger)bitrate
+                           bitrate:(NSNumber *)bitrate
                              error:(NSError **)error {
   self = [super init];
   NSAssert(self, @"super init cannot be nil");
@@ -220,7 +220,7 @@ NSString *const errorMethod = @"error";
     [[self encoder]
      configureCompressSessionWithWidth:_previewSize.width
      height:_previewSize.height
-     bitrate: bitrate ? bitrate : 2000000
+     bitrate: bitrate
      error:&sessionConfigurationError
     ];
     if(sessionConfigurationError){

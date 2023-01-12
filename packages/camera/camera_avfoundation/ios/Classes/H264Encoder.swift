@@ -36,8 +36,8 @@ import Foundation
     // MARK: - configure session
     
     /// create VTCompressSession with default settings
-    @objc public func configureCompressSession(width w: Int, height h: Int, bitrate: Int) throws {
-        print("Compress Session width: \(w) height: \(h) bitrate: \(bitrate)")
+    @objc public func configureCompressSession(width w: Int, height h: Int, bitrate: NSNumber?) throws {
+        print("Compress Session width: \(w) height: \(h) bitrate: \(String(describing: bitrate))")
         let error = VTCompressionSessionCreate(allocator: kCFAllocatorDefault,
                                              width: Int32(w),
                                              height: Int32(h),
@@ -54,11 +54,20 @@ import Foundation
             throw ConfigurationError.cannotCreateSession
         }
         
+        var bitrateToUse: Int
+        if bitrate is Optional<NSNull> {
+            bitrateToUse = 2000000
+        } else if let bitrate = bitrate {
+            bitrateToUse = bitrate.intValue
+        } else {
+            bitrateToUse = 2000000
+        }
+
         let propertyDictionary = [
             kVTCompressionPropertyKey_ProfileLevel: kVTProfileLevel_H264_Baseline_AutoLevel,
             kVTCompressionPropertyKey_MaxKeyFrameInterval: 60,
             kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration: 1,
-            kVTCompressionPropertyKey_AverageBitRate: bitrate,
+            kVTCompressionPropertyKey_AverageBitRate: bitrateToUse,
             kVTCompressionPropertyKey_RealTime: true,
             kVTCompressionPropertyKey_Quality: 0.5,
         ] as CFDictionary
