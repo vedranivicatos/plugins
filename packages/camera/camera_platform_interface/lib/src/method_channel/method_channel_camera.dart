@@ -95,6 +95,7 @@ class MethodChannelCamera extends CameraPlatform {
     CameraDescription cameraDescription,
     ResolutionPreset? resolutionPreset, {
     bool enableAudio = false,
+    int? bitrate,    
   }) async {
     try {
       final Map<String, dynamic>? reply = await _channel

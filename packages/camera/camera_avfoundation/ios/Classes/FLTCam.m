@@ -130,6 +130,7 @@ NSString *const errorMethod = @"error";
                        enableAudio:(BOOL)enableAudio
                        orientation:(UIDeviceOrientation)orientation
                captureSessionQueue:(dispatch_queue_t)captureSessionQueue
+                           bitrate:(NSInteger)bitrate
                              error:(NSError **)error {
   return [self initWithCameraName:cameraName
                  resolutionPreset:resolutionPreset
@@ -137,6 +138,7 @@ NSString *const errorMethod = @"error";
                       orientation:orientation
                    captureSession:[[AVCaptureSession alloc] init]
               captureSessionQueue:captureSessionQueue
+                          bitrate:bitrate
                             error:error];
 }
 
@@ -146,6 +148,7 @@ NSString *const errorMethod = @"error";
                        orientation:(UIDeviceOrientation)orientation
                     captureSession:(AVCaptureSession *)captureSession
                captureSessionQueue:(dispatch_queue_t)captureSessionQueue
+                           bitrate:(NSInteger)bitrate
                              error:(NSError **)error {
   self = [super init];
   NSAssert(self, @"super init cannot be nil");
@@ -214,7 +217,12 @@ NSString *const errorMethod = @"error";
     
     [self setEncoder:[[H264Encoder alloc] init]];
     NSError* sessionConfigurationError;
-    [[self encoder] configureCompressSessionWithWidth:_previewSize.width height:_previewSize.height error:&sessionConfigurationError];
+    [[self encoder]
+     configureCompressSessionWithWidth:_previewSize.width
+     height:_previewSize.height
+     bitrate: bitrate ? bitrate : 2000000
+     error:&sessionConfigurationError
+    ];
     if(sessionConfigurationError){
         NSLog(@"Session Configuration Error : %@", sessionConfigurationError);
     }

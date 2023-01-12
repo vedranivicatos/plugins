@@ -102,6 +102,7 @@ class AVFoundationCamera extends CameraPlatform {
     CameraDescription cameraDescription,
     ResolutionPreset? resolutionPreset, {
     bool enableAudio = false,
+    int? bitrate,
   }) async {
     try {
       final Map<String, dynamic>? reply = await _channel
@@ -111,6 +112,7 @@ class AVFoundationCamera extends CameraPlatform {
             ? _serializeResolutionPreset(resolutionPreset)
             : null,
         'enableAudio': enableAudio,
+        'bitrate': bitrate
       });
 
       return reply!['cameraId']! as int;

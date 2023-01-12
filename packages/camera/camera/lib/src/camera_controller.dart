@@ -230,6 +230,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     this.resolutionPreset, {
     this.enableAudio = true,
     this.imageFormatGroup,
+    this.bitrate,    
   }) : super(const CameraValue.uninitialized());
 
   /// The properties of the camera device controlled by this controller.
@@ -250,6 +251,9 @@ class CameraController extends ValueNotifier<CameraValue> {
   ///
   /// When null the imageFormat will fallback to the platforms default.
   final ImageFormatGroup? imageFormatGroup;
+  
+  /// Video encoding bitrate
+  final int? bitrate;
 
   /// The id of a camera that hasn't been initialized.
   @visibleForTesting
@@ -299,6 +303,7 @@ class CameraController extends ValueNotifier<CameraValue> {
         description,
         resolutionPreset,
         enableAudio: enableAudio,
+        bitrate: bitrate
       );
 
       _unawaited(CameraPlatform.instance

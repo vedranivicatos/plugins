@@ -45,6 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
                        enableAudio:(BOOL)enableAudio
                        orientation:(UIDeviceOrientation)orientation
                captureSessionQueue:(dispatch_queue_t)captureSessionQueue
+                           bitrate:(NSInteger)bitrate
                              error:(NSError **)error;
 - (void)start;
 - (void)stop;
