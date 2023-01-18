@@ -22,13 +22,13 @@ flutter:
 
 dependencies:
   camera_android:
-    path: /Users/vedranivic/projects/forks/plugins/packages/camera/camera_android
+    path: ../camera_android
   camera_avfoundation:
-    path: /Users/vedranivic/projects/forks/plugins/packages/camera/camera_avfoundation
+    path: ../camera_avfoundation
   camera_platform_interface:
-    path: /Users/vedranivic/projects/forks/plugins/packages/camera/camera_platform_interface
+    path: ../camera_platform_interface
   camera_web:
-    path: /Users/vedranivic/projects/forks/plugins/packages/camera/camera_web
+    path: ../camera_web
   flutter:
     sdk: flutter
   flutter_plugin_android_lifecycle: ^2.0.2

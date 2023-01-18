@@ -18,7 +18,7 @@ flutter:
 
 dependencies:
   camera_platform_interface:
-    path: /Users/vedranivic/projects/forks/plugins/packages/camera/camera_platform_interface
+    path: ../camera_platform_interface
   flutter:
     sdk: flutter
   stream_transform: ^2.0.0
