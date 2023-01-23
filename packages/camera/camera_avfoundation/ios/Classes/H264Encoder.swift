@@ -220,7 +220,10 @@ import Foundation
     
     /// Call on stopDataStream to properly dispose current compression session
     @objc public func invalidateCompressionSession() {
-        VTCompressionSessionInvalidate(_session)
+        guard let session = _session else {
+            return
+        }
+        VTCompressionSessionInvalidate(session)
     }
 }
 

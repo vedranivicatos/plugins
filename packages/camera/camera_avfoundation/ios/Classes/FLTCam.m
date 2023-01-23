@@ -377,7 +377,8 @@ NSString *const errorMethod = @"error";
     case FLTResolutionPresetUltraHigh:
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset3840x2160]) {
         _captureSession.sessionPreset = AVCaptureSessionPreset3840x2160;
-        _previewSize = CGSizeMake(3840, 2160);
+//        _previewSize = CGSizeMake(3840, 2160);
+        _previewSize = CGSizeMake(2160, 3840);
         break;
       }
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPresetHigh]) {
@@ -390,31 +391,36 @@ NSString *const errorMethod = @"error";
     case FLTResolutionPresetVeryHigh:
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset1920x1080]) {
         _captureSession.sessionPreset = AVCaptureSessionPreset1920x1080;
-        _previewSize = CGSizeMake(1920, 1080);
+//        _previewSize = CGSizeMake(1920, 1080);
+        _previewSize = CGSizeMake(1080, 1920);
         break;
       }
     case FLTResolutionPresetHigh:
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720]) {
         _captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
-        _previewSize = CGSizeMake(1280, 720);
+//        _previewSize = CGSizeMake(1280, 720);
+        _previewSize = CGSizeMake(720, 1280);
         break;
       }
     case FLTResolutionPresetMedium:
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset640x480]) {
         _captureSession.sessionPreset = AVCaptureSessionPreset640x480;
-        _previewSize = CGSizeMake(640, 480);
+//        _previewSize = CGSizeMake(640, 480);
+        _previewSize = CGSizeMake(480, 640);
         break;
       }
     case FLTResolutionPresetLow:
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset352x288]) {
         _captureSession.sessionPreset = AVCaptureSessionPreset352x288;
-        _previewSize = CGSizeMake(352, 288);
+//        _previewSize = CGSizeMake(352, 288);
+        _previewSize = CGSizeMake(288, 352);
         break;
       }
     default:
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPresetLow]) {
         _captureSession.sessionPreset = AVCaptureSessionPresetLow;
-        _previewSize = CGSizeMake(352, 288);
+//        _previewSize = CGSizeMake(352, 288);
+        _previewSize = CGSizeMake(288, 352);
       } else {
         NSError *error =
             [NSError errorWithDomain:NSCocoaErrorDomain
